@@ -1,0 +1,5 @@
+Please only put libraries here that are not convenient to download using drush make
+either by git or downloading a zip file.
+
+Libraries put here will be available to scripts at sites/all/libraries/custom 
+which is a symlink to this directory.

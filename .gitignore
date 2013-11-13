@@ -1,0 +1,15 @@
+docroot/sites/default/db_settings.php
+docroot/sites/default/files
+docroot/googleanalytics
+.vagrant
+tmp
+.idea
+**/**/.gitignore
+www
+vendors
+drupal/db/*.zip
+drupal/resources/files
+share
+.DS_Store
+chef/configurations/ci_conf/templates/default/id_rsa
+chef/configurations/ci_conf/templates/default/id_rsa.pub

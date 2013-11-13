@@ -1,0 +1,8 @@
+---
+  local:
+    server:
+      ip: "10.0.0.10"
+      hosts:
+        - "pma.drupal.dev"
+      configs:
+        - "local_conf"

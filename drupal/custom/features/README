@@ -1,0 +1,3 @@
+Please only put features here that are not convenient to download using drush make
+either by git or downloading a zip file.
+

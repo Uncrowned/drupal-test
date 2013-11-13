@@ -1,0 +1,16 @@
+I’m a Linux\Unix guru OR Mac user.
+
+Install Virtual box 4.2.x (https://www.virtualbox.org/wiki/Downloads)
+Install Vagrant 1.3.4 (http://downloads.vagrantup.com)
+Install Vagrant Hosts Updater plugin with command
+> vagrant plugin install vagrant-hostsupdater
+Install Putty (http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html)
+Install NFS server
+Pull git repository from to project dir  (if need)
+Open console and change directory to project dir. If you use windows, blame Bill Gates for poor console. Install and use PowerShell, it looks like more useful.
+	Run command
+	$ vagrant up
+Now Vagrant is configuring your developer server (install all necessary software). You have about 1 hour to drink coffee. Check from time to time if everything is ok, and no errors. When vagrant finishes ....
+Run
+$ vagrant ssh
+Now you are in virtual machine. Project code is mapped into directory /vagrant.

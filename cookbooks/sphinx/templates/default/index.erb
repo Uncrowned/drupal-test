@@ -1,0 +1,36 @@
+index <%= @new_resource.name %> {
+<% @new_resource.params.sort.each do |k, v| %>
+    <%= k %> = <%= v %>
+<% end %>
+
+<% @new_resource.rt_field.sort.each do |n| %>
+    rt_field = <%= n %>
+<% end %>
+<% @new_resource.rt_attr_uint.sort.each do |n| %>
+    rt_attr_uint = <%= n %>
+<% end %>
+<% @new_resource.rt_attr_bool.sort.each do |n| %>
+    rt_attr_bool = <%= n %>
+<% end %>
+<% @new_resource.rt_attr_bigint.sort.each do |n| %>
+    rt_attr_bigint = <%= n %>
+<% end %>
+<% @new_resource.rt_attr_float.sort.each do |n| %>
+    rt_attr_float = <%= n %>
+<% end %>
+<% @new_resource.rt_attr_multi.sort.each do |n| %>
+    rt_attr_multi = <%= n %>
+<% end %>
+<% @new_resource.rt_attr_multi_64.sort.each do |n| %>
+    rt_attr_multi_64 = <%= n %>
+<% end %>
+<% @new_resource.rt_attr_timestamp.sort.each do |n| %>
+    rt_attr_timestamp = <%= n %>
+<% end %>
+<% @new_resource.rt_attr_string.sort.each do |n| %>
+    rt_attr_string = <%= n %>
+<% end %>
+<% @new_resource.rt_attr_json.sort.each do |n| %>
+    rt_attr_json = <%= n %>
+<% end %>
+}

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="db" basedir=".">
+    <target name="init" description="Create DB from dump">
+        <echo>Project sql dump import started</echo>
+        <if>
+          <and>
+            <equals arg1="${project.sql.download}" arg2="true" casesensitive="false" trim="true"/>
+              <not>
+                <available file="${struct.db}/${project.sql.file}.zip" value="Yes"/>
+              </not>
+          </and>
+          <then>
+            <exec command="wget -c -O ${struct.db}/${project.sql.file}.zip ${project.sql.url}"/>
+          </then>
+        </if>
+        <phingcall target="drop"/>
+        <phingcall target="db.create"/>
+        <echo>unzip -p  ${struct.db}/${project.sql.file}.zip | mysql -D${env.db.name} -h${env.db.host} -u${env.db.user} -p${env.db.password}</echo>
+        <exec command="unzip -p  ${struct.db}/${project.sql.file}.zip | mysql -D${env.db.name} -h${env.db.host} -u${env.db.user} -p${env.db.password}" checkreturn="true" level="debug" escape="false"/>
+        <echo>Project sql dump import finished</echo>
+    </target>
+
+    <target name="drop" depends="settings.create, db.create">
+        <drush command="sql-drop" bin="${project.drush.bin}" assume="yes">
+            <option name="root">'${struct.code}'</option>
+        </drush>
+        <echo>Project db droped</echo>
+    </target>
+
+    <target name="create">
+        <pdo url="${env.db.driver}:host=${env.db.host}"
+             userId="${env.db.user.sudo}" password="${env.db.user.sudo.password}"
+             onerror="abort">
+            CREATE DATABASE IF NOT EXISTS ${env.db.name};
+        </pdo>
+        <echo>Project db created</echo>
+    </target>
+
+    <target name="snap">
+      <phingcall target="export">
+        <property name="db.export.path" value="${struct.db}/${project.sql.file}" override="TRUE" />
+      </phingcall>
+    </target>
+
+    <target name="export">
+      <phingcall target="dir.ensure">
+        <property name="dir" value="${struct.tmp}/db_tmp" override="TRUE"/>
+      </phingcall>
+      <drush command="sql-dump" bin="${project.drush.bin}" assume="yes">
+        <option name="root">'${struct.code}'</option>
+        <option name="result-file">'${struct.tmp}/db_tmp/${project.sql.file}'</option>
+      </drush>
+      <delete file="${db.export.path}.zip"/>
+      <zip destfile="${db.export.path}.zip" basedir="${struct.tmp}/db_tmp"/>
+      <delete dir="${struct.tmp}" failonerror="true"/>
+      <echo>Project db dumped</echo>
+    </target>
+</project>

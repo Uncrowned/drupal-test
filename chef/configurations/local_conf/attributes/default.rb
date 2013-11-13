@@ -1,0 +1,1 @@
+default["configuration"]["name"] = "local"

@@ -1,0 +1,12 @@
+<?php
+$conf['cache_backends'][] = '<%= @handler_path %>';
+$conf['memcache_key_prefix'] = '<%= @prefix %>';
+$conf['cache_default_class'] = '<%= @handler %>';
+
+<% @servers.each do |v| %>
+$conf['memcache_servers']['<%= v[:host] %>:<%= v[:port] %>'] = '<%= v[:cluster] %>';
+<% end %>
+
+<% @bins.each do |table, cluster| %>
+$conf['memcache_bins']['<%= table %>'] = '<%= cluster %>';
+<% end %>

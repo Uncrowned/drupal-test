@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="main" default="install">
+
+  <!--
+    Profile property define file contains properties for current build.
+    It is usefull for different developers that have different systems and needs different configs.
+    If profile is not defined use default.
+  -->
+  <condition property="profile" value="default">
+    <not>
+      <isset property="profile"/>
+    </not>
+  </condition>
+
+  <!-- Load profile specified properties -->
+  <property name="build" value="phing"/>
+
+  <!-- Load profile specified properties -->
+  <property file="${build}/properties/${profile}.prop"/>
+  <!-- Load project specified properties -->
+  <property file="${build}/properties/project.prop"/>
+
+  <!-- SVN structure dependent settings -->
+  <resolvepath propertyName="struct.root" file="."/>
+
+  <property name="struct.build" value="${struct.root}/${build}"/>
+  <property name="struct.build.submodules" value="${struct.build}/submodules"/>
+  <property name="struct.build.templates" value="${struct.build}${project.build.templates.dir}"/>
+
+  <property name="struct.code" value="${struct.root}${project.code.dir}"/>
+  <property name="struct.db" value="${struct.root}${project.sql.dir}"/>
+
+  <property name="struct.tmp" value="${struct.root}${project.tmp.dir}"/>
+
+  <property name="struct.report" value="${struct.root}${project.report.dir}"/>
+  <property name="struct.report.tests" value="${struct.report}/${project.report.tests.dir}"/>
+  <property name="struct.report.phplint" value="${struct.report}/${project.report.phplint.dir}"/>
+  <property name="struct.report.jslint" value="${struct.report}/${project.report.jslint.dir}"/>
+  <property name="struct.report.phpcs" value="${struct.report}/${project.report.phpcs.dir}"/>
+  <property name="struct.report.pmd" value="${struct.report}/${project.report.pmd.dir}"/>
+  <property name="struct.report.cpd" value="${struct.report}/${project.report.cpd.dir}"/>
+  <property name="struct.report.depend" value="${struct.report}/${project.report.depend.dir}"/>
+
+  <property name="struct.logs" value="${struct.root}${project.logs.dir}"/>
+  <property name="struct.tools" value="${struct.root}${project.tools.dir}"/>
+
+  <property name="struct.custom" value="${struct.root}${project.custom}"/>
+  <property name="struct.custom.features" value="${struct.custom}/${project.custom.features}"/>
+  <property name="struct.custom.modules" value="${struct.custom}/${project.custom.modules}"/>
+  <property name="struct.custom.themes" value="${struct.custom}/${project.custom.themes}"/>
+  <property name="struct.custom.libraries" value="${struct.custom}/${project.custom.libraries}"/>
+
+  <property name="struct.settings" value="${struct.root}${env.drupal.settings.dir.source}"/>
+
+  <property name="struct.files" value="${struct.root}/${project.drupal.files.dir}"/>
+
+  <property name="struct.drake.scripts.dir" value="${struct.root}${project.drake.scripts.dir}"/>
+  <property name="struct.deploy.package.dir" value="${struct.root}${project.deploy.package.dir}"/>
+
+  <if>
+    <equals arg1="${project.settings.use_default_dir}" arg2="true" casesensitive="false" trim="true"/>
+    <then>
+      <property name="drupal.site.subdir" value="default"/>
+    </then>
+    <else>
+      <property name="drupal.site.subdir" value="${env.host.name}"/>
+    </else>
+  </if>
+
+  <property name="struct.build.templates.server" value="${struct.build.templates}/${env.server}"/>
+  <property name="drupal.files.dir" value="/sites/${drupal.site.subdir}/files"/>
+
+  <condition property="env.proxy" value="">
+    <not>
+      <isset property="env.proxy"/>
+    </not>
+  </condition>
+
+  <import file="${struct.build.submodules}/drush/build.xml"/>
+  <import file="${struct.build.submodules}/drupal/build.xml"/>
+  <import file="${struct.build.submodules}/deploy/build.xml"/>
+  <import file="${struct.build.submodules}/lint/build.xml"/>
+  <import file="${struct.build.submodules}/pmd/build.xml"/>
+  <import file="${struct.build.submodules}/cpd/build.xml"/>
+  <import file="${struct.build.submodules}/depend/build.xml"/>
+  <import file="${struct.build.submodules}/test/build.xml"/>
+  <import file="${struct.build.submodules}/codestyle/build.xml"/>
+  <import file="${struct.build.submodules}/project/build.xml"/>
+  <import file="${struct.build.submodules}/env/build.xml"/>
+  <import file="${struct.build.submodules}/db/build.xml"/>
+
+
+  <target name="install" depends="clear" description="Install site">
+    <if>
+      <equals arg1="${project.install.from_db}" arg2="true" casesensitive="false" trim="true"/>
+    <then>
+      <phingcall target="remake"/>
+      <phingcall target="init"/>
+      <phingcall target="install_post_db"/>
+      <phingcall target="solution.install"/>
+    </then>
+    <else>
+      <phingcall target="drupal.install"/>
+    </else>
+    </if>
+    <phingcall target="project.install"/>
+  </target>
+
+  <target name="make" depends="clear" description="Install site">
+    <phingcall target="drupal.make"/>
+    <phingcall target="project.make"/>
+  </target>
+
+  <target name="remake" depends="clear" description="Install site">
+    <phingcall target="make"/>
+    <phingcall target="settings.create"/>
+  </target>
+
+
+  <target name="reinstall" depends="clear" description="Install site">
+    <phingcall target="remake"/>
+    <phingcall target="solution.install"/>
+  </target>
+
+  <target name="update" description="Update site">
+    <phingcall target="settings.create"/>
+    <phingcall target="solution.install"/>
+  </target>
+
+  <target name="verify" description="Verify code" depends="clear"/>
+
+  <target name="clear" description="Clear dirs">
+    <phingcall target="drupal.clear"/>
+    <phingcall target="dir.clear">
+      <property name="dir" value="${struct.code}" override="TRUE"/>
+    </phingcall>
+    <phingcall target="dir.clear">
+      <property name="dir" value="${struct.tmp}" override="TRUE"/>
+    </phingcall>
+    <echo>Cleaned directory</echo>
+  </target>
+
+  <target name="dependences.clear" description="Clear dirs">
+    <delete dir="${struct.tools}" includeemptydirs="true" failonerror="true"/>
+    <echo>Cleaned directory</echo>
+  </target>
+
+  <target name="test" description="Runs unit tests">
+    <phingcall target="selenium-run"/>
+    <phingcall target="run"/>
+    <phingcall target="selenium-stop"/>
+  </target>
+
+  <target name="dir.clear">
+    <if>
+      <available file="${dir}" property="dir_exists"/>
+      <then>
+        <delete dir="${dir}" includeemptydirs="true" failonerror="true"/>
+      </then>
+    </if>
+  </target>
+
+  <target name="dir.ensure">
+    <if>
+      <not>
+        <available file="${dir}" property="dir_exists"/>
+      </not>
+      <then>
+        <mkdir dir="${dir}" mode="7777"/>
+      </then>
+    </if>
+  </target>
+
+
+  <!-- ### Setup file sets
+
+Setup file sets - patterns for different aspects of the source code.
+These are used in other targets.
+
+This is part of the initialization of the build. This target should only be
+called from `init` target. -->
+  <target name="setup-filesets" description="Service target to set all pathes">
+    <!-- Define pattern sets for future reference -->
+
+    <!-- PHP files -->
+    <patternset id="php">
+      <include name="**/*.php"/>
+      <include name="**/*.module"/>
+      <include name="**/*.install"/>
+      <include name="**/*.inc"/>
+      <include name="**/*.profile"/>
+      <include name="**/*.test"/>
+    </patternset>
+
+    <!-- Javascript files -->
+    <patternset id="js">
+      <include name="**/*.js"/>
+      <!-- Minimized JavaScript files should not be analyzed.
+           In their optimized state they can not be expexted
+           to conform to coding standards. -->
+      <exclude name="**/*.min.js"/>
+    </patternset>
+
+    <!-- CSS files -->
+    <patternset id="css">
+      <include name="**/*.css"/>
+    </patternset>
+
+    <!-- Directories for community contributed code. We exclude these from
+         code analysis as we cannot be held responsible for any problems
+         here. -->
+    <patternset id="contrib">
+      <exclude name="**/contrib/**/*.*"/>
+      <exclude name="**/libraries/**/*.*"/>
+    </patternset>
+
+    <patternset id="custom">
+      <include name="**/custom/**/*.*"/>
+    </patternset>
+
+
+    <!-- We exclude generated files from We exclude these from code analysis
+         as we cannot be held responsible for any problems here. -->
+    <patternset id="generated">
+      <exclude name="**/*.features.*"/>
+      <exclude name="**/*.field_group.inc"/>
+      <exclude name="**/*.layouts.inc"/>
+      <exclude name="**/*.pages_default.inc"/>
+      <exclude name="**/*.panels_default.inc"/>
+      <exclude name="**/*.strongarm.inc"/>
+      <exclude name="**/*.views_default.inc"/>
+    </patternset>
+
+    <!-- Define file sets for future reference -->
+
+    <!-- All PHP files -->
+    <fileset id="src.php" dir="${struct.code}">
+      <patternset refid="php"/>
+    </fileset>
+
+    <!-- Custom PHP files -->
+    <fileset id="src.php.custom" dir="${struct.custom}">
+      <patternset refid="php"/>
+      <patternset refid="generated"/>
+    </fileset>
+
+    <!-- All Javascript files -->
+    <fileset id="src.js" dir="${struct.code}">
+      <patternset refid="js"/>
+    </fileset>
+
+    <!-- Custom Javascript files -->
+    <fileset id="src.js.custom" dir="${struct.code}">
+      <patternset refid="js"/>
+    </fileset>
+
+    <!-- All CSS files -->
+    <fileset id="src.css" dir="${struct.code}">
+      <patternset refid="css"/>
+    </fileset>
+
+    <!-- Custom CSS files -->
+    <fileset id="src.css.custom" dir="${struct.code}">
+      <patternset refid="css"/>
+      <patternset refid="contrib"/>
+    </fileset>
+    <echo>Paths set</echo>
+  </target>
+
+  <target name="test-forks" description="Check if project contains forks" depends="clear">
+    <drush command="pm-refresh" bin="${project.drush.bin}">
+      <option name="root">"${struct.code}"</option>
+    </drush>
+    <delete dir="${struct.tmp}/code" includeemptydirs="true" failonerror="true"/>
+    <delete file="${struct.report.tests}/${project.report.fork.file}"/>
+    <mkdir dir="${struct.report.tests}"/>
+    <echo>Check for forks starts</echo>
+    <if>
+      <istrue value="${project.make.no.patches.txt}"/>
+      <then>
+        <drush command="make" assume="yes" bin="${project.drush.bin}">
+          <param>'${project.make.file}'</param>
+          <param>'${struct.tmp}/code'</param>
+          <option name="no-patch-txt"/>
+        </drush>
+      </then>
+      <else>
+        <drush command="make" assume="yes" bin="${project.drush.bin}">
+          <param>'${project.make.file}'</param>
+          <param>'${struct.tmp}/code"</param>
+        </drush>
+      </else>
+    </if>
+
+    <phingcall target="cache.clear"/>
+
+    <drush command="pm-enable" assume="yes" bin="${project.drush.bin}">
+      <param>'hacked_make'</param>
+      <option name="root">'${struct.code}'</option>
+    </drush>
+
+    <drush command="hacked-make-list-projects" bin="${project.drush.bin}">
+      <param>'${struct.tmp}/code'</param>
+      <option name="force-rebuild"/>
+      <option name="root">'${struct.code}'</option>
+      <option name="xml">'${struct.report.tests}/${project.report.fork.file}'</option>
+      <option name="exclude">'${project.report.fork.exclude}'</option>
+    </drush>
+
+    <echo>Check for forks finished</echo>
+  </target>
+</project>
+

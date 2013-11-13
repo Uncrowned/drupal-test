@@ -1,0 +1,33 @@
+# user specific properties
+
+
+env.db.driver=mysql
+env.db.host=localhost
+env.db.name=
+env.db.user=root
+env.db.password=root
+env.db.user.sudo=root
+env.db.user.sudo.password=root
+
+env.drupal.settings.dir.source=/share/drupal/settings
+
+;env.proxy=127.0.0.1:3128
+env.proxy=
+
+env.deploy.package.profile=dev.server
+
+env.java="/usr/bin/java"
+
+env.environment=development
+env.solr.start=0
+
+env.solr.server=default
+
+env.memcache = 0
+env.memcache.tpl = default
+env.memcache.prefix = default
+
+env.cdn = 0
+env.cdn.tpl = default
+
+env.log_dir=../resources/logs

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="project" basedir=".">
+    <!-- PUT HERE PROJECT SPECIFIC TARGETS -->
+    <target name="make" description="Register migration">
+        <!-- PUT HERE CUSTOM ACTIONS REQUIRED ON MAKE TARGET -->
+    </target>
+
+    <target name="install_post_db" description="Project install post DB">
+        <!-- PUT HERE TO RUN PROCEDURES AFTER DB INSTALL -->
+    </target>
+
+    <target name="install" description="Project specific install actions">
+        <!-- PUT HERE TO RUN PROCEDURES ON INSTALL -->
+    </target>
+
+</project>
