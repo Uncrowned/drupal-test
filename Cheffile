@@ -24,8 +24,8 @@ cookbook 'chef-solo-search',
 #d
 
 cookbook 'drush',
-  :git => 'https://github.com/vasilykraev/chef-drush.git',
-  :ref => 'master'
+  :git => 'https://github.com/goruha/chef-drush',
+  :ref => 'add_alias_provider'
 
 #e
 
