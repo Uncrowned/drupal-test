@@ -21,11 +21,8 @@
 # on GitHub, where PEAR repo uses CNAME record.
 
 # Chef resources need unique names in case in run_list twice.
-current_vers = %x[ pear -V 2>&1 | grep PEAR | awk '{print $NF}' ]
-if current_vers < "1.9.1"
-  php_pear "PEAR-drush" do
-    package_name "PEAR"
-    version "1.9.1"
-    action :upgrade
-  end
+php_pear "PEAR-drush" do
+  package_name "PEAR"
+  version "1.9.1"
+  action :upgrade
 end
