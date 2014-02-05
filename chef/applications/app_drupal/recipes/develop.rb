@@ -46,7 +46,7 @@ end
 
 include_recipe "phpunit"
 include_recipe "phing"
-
+include_recipe "drush"
 include_recipe "git"
 php_pear "VersionControl_Git" do
   action :install
