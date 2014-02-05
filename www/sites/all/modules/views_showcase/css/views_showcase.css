@@ -1,0 +1,81 @@
+/* $Id: views_showcase.css,v 1.1 2010/04/29 16:40:36 khaledzaidan Exp $ */ 
+.views-showcase {
+}
+
+.views-showcase div.views-showcase-big-panel {
+  list-style-image: none;
+  margin:0;
+  padding:0;
+  height: 225px;
+}
+
+.views-showcase .views-showcase-big-panel li, .views-showcase .views-showcase-big-panel div {
+  list-style-image: none;
+  /*margin:0;*/
+  padding:0;
+  background: none;
+}
+
+.views-showcase-mini-list {
+  overflow: hidden;
+  margin: 0 !important;
+}
+
+.views-showcase-big-panel {
+  height: 220px;
+}
+
+.views-showcase-pager-item {
+  padding: 0 5px;
+  border-bottom: 1px dashed #FFF;
+}
+
+.views-showcase-mini-list .activeItem, .views-showcase-pager-item:hover {
+  background-color: #BBB;
+}
+
+.views-showcase-field-label, .views-showcase-field-content {
+  display: inline;
+}
+
+ul.views-showcase-pager-item-sublist, ul.views-showcase-mini-list {
+  list-style: none;
+}
+
+.views-showcase-mini-list li.views-showcase-pager-item , .views-showcase-mini-list li.views-showcase-pager-subitem {
+  background-image: none;
+  height: 50px;
+}
+
+.views-showcase-subitem label, .views-showcase-content-title, .views-showcase-naviation-title {
+  display:none;
+}
+
+/*'right' skin*/
+
+.skin-right .views-showcase-navigation-container {
+  float: right;
+}
+
+.skin-right .views-showcase-content-container {
+  float: left;
+}
+
+/*'left' skin*/
+
+.skin-left .views-showcase-navigation-container {
+  float: left;
+}
+
+.skin-left .views-showcase-content-container {
+  float: right;
+}
+
+.views-showcase-pager-item-sublist {
+  padding: 15px 0px 0px 10px;
+  font-size: 140%;
+}
+
+.views-showcase-pager-item-sublist a {
+  color: #000000 !important;
+}
