@@ -31,7 +31,7 @@
         <pdo url="${env.db.driver}:host=${env.db.host}"
              userId="${env.db.user.sudo}" password="${env.db.user.sudo.password}"
              onerror="abort">
-            CREATE DATABASE IF NOT EXISTS ${env.db.name};
+            CREATE DATABASE IF NOT EXISTS `${env.db.name}`; 
         </pdo>
         <echo>Project db created</echo>
     </target>

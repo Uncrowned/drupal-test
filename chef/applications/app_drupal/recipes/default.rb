@@ -1,3 +1,7 @@
-include_recipe "app_php"
-include_recipe "php::module_mysql"
-include_recipe "php::module_mbstring"
+app_drupal_nginx 'sciencescape' do
+  action :create
+  host 'sciencescape'
+  aliases node[:app_sciencescape][:host][:aliases]
+  docroot node[:app_sciencescape][:host][:docroot]
+  drupal_file_dir '/sites/default/files'
+end

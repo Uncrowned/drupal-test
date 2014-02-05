@@ -21,8 +21,10 @@ environment = environments[active_environment]
 
    environment.each do |machinename, options|
     config.vm.define [active_environment, machinename].join('__') do |machine|
-       machine.vm.box = "centos6.3_x86_64"
-       machine.vm.box_url = "https://s3.amazonaws.com/itmat-public/centos-6.3-chef-10.14.2.box"
+       #machine.vm.box = "centos6.3_x86_64"
+       #machine.vm.box_url = "https://s3.amazonaws.com/itmat-public/#centos-6.3-chef-10.14.2.box"
+       machine.vm.box = "centos6.3_i386"
+       #machine.vm.box_url = "http://developer.nrel.gov/downloads/#vagrant-boxes/CentOS-6.3-i386-v20130101.box"
 
        machine.hostsupdater.aliases = options["hosts"]
        machine.vm.network :private_network, ip: options["ip"]

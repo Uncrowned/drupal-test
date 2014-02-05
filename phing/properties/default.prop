@@ -1,9 +1,9 @@
 # user specific properties
 
-
+;видимо надо прописывать название бд в друпал файлы
 env.db.driver=mysql
 env.db.host=localhost
-env.db.name=
+env.db.name=default
 env.db.user=root
 env.db.password=root
 env.db.user.sudo=root

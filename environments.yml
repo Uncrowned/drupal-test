@@ -3,6 +3,8 @@
     server:
       ip: "10.0.0.10"
       hosts:
-        - "pma.drupal.dev"
+        - "pma.localhost"
+        - "test.drupal"
       configs:
         - "local_conf"
+

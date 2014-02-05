@@ -3,7 +3,7 @@
 project.code.dir=/www
 
 project.sql.dir=/drupal/db
-project.sql.file=light_db.sql
+project.sql.file=untitled.mysql
 project.sql.download=true
 project.sql.url=
 
