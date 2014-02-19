@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="split_modules" basedir=".">
+    <target name="splitmod" description="Split all modules on contribution and custom">        
+        <echo>Project split modules started</echo>
+        <phingcall target="createXmlFiles"></phingcall>
+        <phingcall target="getModulesList"></phingcall>
+    </target>
+    
+    <target name="getModulesList">
+        <exec command="drush pml --pipe" dir="${struct.code}" outputProperty="modulesList"/>
+        <!-- <exec dir="${struct.code}" outputProperty="modulesList"/> -->
+        <echo>Modules list obtained</echo>
+        <!-- <echo msg="${modulesList}"/> -->
+        <foreach list="${modulesList}" param="mname" target="getProject" delimiter="${line.separator}" />
+    </target>
+    
+    <target name="getProject">
+        <exec command="drush pmi ${mname} --pipe --fields=project --format=csv" dir="${struct.code}" checkreturn="true" level="debug" escape="false" outputProperty="currentProject"/>
+        <if>
+            <!-- Im not shure that custom modules has empty project attribute, i saw project=Unknown, but mb its normal, need clarify-->
+            <equals arg1="${currentProject}" arg2="Unknown"/>
+            <then>
+                <echo file="${project.splitmod.file.custom}" msg="${project.splitmod.xml.module.begin}${mname}${project.splitmod.xml.module.end}${line.separator}" append="true"/>
+            </then>
+            <else>
+                <echo file="${project.splitmod.file.contribute}" msg="${project.splitmod.xml.module.begin}${mname}${project.splitmod.xml.module.end}${line.separator}" append="true"/>
+            </else>
+        </if>
+    </target>
+    
+    <target name="createXmlFiles">
+        <if>
+            <not>
+                 <available file="${project.splitmod.file.contribute}"/>
+            </not>
+            <then>
+                <touch file="${project.splitmod.file.contribute}"/>
+            </then>
+            <else>
+                <delete file="${project.splitmod.file.contribute}"/>
+                <touch file="${project.splitmod.file.contribute}"/>
+            </else>
+        </if>
+        <if>
+            <not>
+                 <available file="${project.splitmod.file.custom}"/>
+            </not>
+            <then>
+                <touch file="${project.splitmod.file.custom}"/>
+            </then>
+            <else>
+                <delete file="${project.splitmod.file.custom}"/>
+                <touch file="${project.splitmod.file.custom}"/>
+            </else>
+        </if>
+        <!-- Should create a headers-->
+        <echo file="${project.splitmod.file.contribute}" msg="${project.splitmod.xml.header}${line.separator}"/>
+        <echo file="${project.splitmod.file.custom}" msg="${project.splitmod.xml.header}${line.separator}"/>
+        
+        <echo>Xml files created</echo>
+    </target>
+    
+    <target name="refreshModulesInfo">
+        <exec command="drush rf" checkreturn="true" level="debug" escape="false"/>
+        <echo>Modules info refreshed</echo>
+    </target>
+</project>
