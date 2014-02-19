@@ -105,3 +105,9 @@ project.deploy.install.name=drush-install.sh
 project.test.targets.fast=Mockup Theme
 project.test.targets.normal=
 project.test.targets.slow=
+
+project.splitmod.file.contribute=contribute.xml
+project.splitmod.file.custom=custom.xml
+project.splitmod.xml.header=<?xml version="1.1" encoding="UTF-8" ?>
+project.splitmod.xml.module.begin=<module>
+project.splitmod.xml.module.end=</module>
