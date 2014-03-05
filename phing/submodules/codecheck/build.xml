@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="codecheck" basedir=".">
+    <taskdef name="xmlparser" classpath="${struct.tools}/xmlParser" classname="XmlParserTask"/>
+    
+    <target name="codecheck" description="Check all custom modules on code style, mess, copy-past.">
+        <echo>Project for check custom modules started</echo>
+        <phingcall target="createTempDirectory"></phingcall>
+        <phingcall target="parseAndCopy"></phingcall>
+        <phingcall target="launchTests"></phingcall>
+        <phingcall target="deleteTempDirectory"></phingcall>
+    </target>
+    
+    <target name="parseAndCopy">
+        <xmlparser file="${project.splitmod.file.custom}" tag="module" outputProperty="customModulesList"/>
+        <foreach list="${customModulesList}" param="mname" target="copyCustomModule"/>
+    </target>
+
+    <target name="launchTests">
+        <phingcall target="phpcs-custom"></phingcall>
+        <phingcall target="cpd-custom"></phingcall>
+        <phingcall target="pmd-custom"></phingcall>
+    </target>
+    
+    <target name="createTempDirectory">
+        <if>
+            <not>
+                 <available file="${struct.root}${project.custom}/${project.custom.modules}"/>
+            </not>
+            <then>
+                <mkdir dir="${struct.root}${project.custom}/${project.custom.modules}"/>
+            </then>
+            <else>
+                <delete dir="${struct.root}${project.custom}/${project.custom.modules}"/>
+                <mkdir dir="${struct.root}${project.custom}/${project.custom.modules}"/>
+            </else>
+        </if>
+        <echo>Temp directory created</echo>
+    </target>
+    
+    <target name="deleteTempDirectory">
+        <if>
+            <available file="${struct.root}${project.custom}/${project.custom.modules}"/>
+            <then>
+                <delete dir="${struct.root}${project.custom}/${project.custom.modules}"/>
+            </then>
+        </if>
+        <echo>Temp directory deleted</echo>
+    </target>
+    
+    <target name="copyCustomModule">
+        <exec command="drush pmi ${mname} --pipe --fields=path --format=csv" dir="${struct.code}" outputProperty="result"/>
+        <mkdir dir="${struct.root}${project.custom}/${project.custom.modules}/${mname}"/>
+        <copy todir="${struct.root}${project.custom}/${project.custom.modules}/${mname}">
+            <fileset dir="${struct.code}/${result}" >
+                <include name="**"/>
+            </fileset>
+        </copy>
+        <echo msg="${mname} copied"/>
+    </target>
+</project>
