@@ -8,7 +8,6 @@
     </phingcall>
   </target>
 
-
   <target name="pmd" description="Run Project Mess Detector (PMD) for PHP Code for all code">
     <phingcall target="pmd-process">
       <property name="pmd.fileset" value="src.php" override="TRUE"/>
