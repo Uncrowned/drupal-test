@@ -109,8 +109,6 @@ project.test.targets.slow=
 
 project.splitmod.file.contribute=drupal/contribute.xml
 project.splitmod.file.custom=drupal/custom.xml
-project.splitmod.xml.header=<?xml version="1.1" encoding="UTF-8" ?>
-project.splitmod.xml.module.begin=<module>
-project.splitmod.xml.module.end=</module>
+project.splitmod.xml.header=<?xml version="1.0" encoding="UTF-8"?>
 project.splitmod.xml.wrapper.begin=<modules>
 project.splitmod.xml.wrapper.end=</modules>

@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="split_modules" basedir=".">
+    <taskdef name="xmlwriter" classpath="${struct.tools}/xmlInstruments" classname="XmlWriterTask"/>
+    
     <target name="splitmod" description="Split all modules on contribution and custom">        
         <echo>Project for split modules started</echo>
         <!-- <phingcall target="refreshModulesInfo"></phingcall> -->
         <phingcall target="createXmlFiles"></phingcall>
         <phingcall target="getModulesList"></phingcall>
-        <phingcall target="endXml"></phingcall>
     </target>
     
     <target name="getModulesList">
         <exec command="drush pml --pipe" dir="${struct.code}" outputProperty="modulesList"/>
         <echo>Modules list obtained</echo>
-        
         <foreach list="${modulesList}" param="mname" target="getProject" delimiter="${line.separator}" />
     </target>
     
@@ -22,26 +22,14 @@
         <!-- Create a wrapper tag-->
         <echo file="${project.splitmod.file.custom}" msg="${project.splitmod.xml.wrapper.begin}${line.separator}" append="true"/>
         <echo file="${project.splitmod.file.contribute}" msg="${project.splitmod.xml.wrapper.begin}${line.separator}" append="true"/>
-    </target>
-    
-    <target name="endXml">
-        <!-- Close wrapper tag -->
+        <!-- This is close the wrapper tag -->
         <echo file="${project.splitmod.file.custom}" msg="${project.splitmod.xml.wrapper.end}${line.separator}" append="true"/>
         <echo file="${project.splitmod.file.contribute}" msg="${project.splitmod.xml.wrapper.end}${line.separator}" append="true"/>
     </target>
     
     <target name="getProject">
-        <exec command="drush pmi ${mname} --pipe --fields=project --format=csv" dir="${struct.code}" checkreturn="true" level="debug" escape="false" outputProperty="currentProject"/>
-        <if>
-            <!-- Im not shure that custom modules has empty project attribute, i saw project=Unknown, but mb its normal, need to clarify-->
-            <equals arg1="${currentProject}" arg2="Unknown"/>
-            <then>
-                <echo file="${project.splitmod.file.custom}" msg="${project.splitmod.xml.module.begin}${mname}${project.splitmod.xml.module.end}${line.separator}" append="true"/>
-            </then>
-            <else>
-                <echo file="${project.splitmod.file.contribute}" msg="${project.splitmod.xml.module.begin}${mname}${project.splitmod.xml.module.end}${line.separator}" append="true"/>
-            </else>
-        </if>
+        <exec command="drush pmi ${mname} --pipe" dir="${struct.code}" checkreturn="true" level="debug" escape="false" outputProperty="currentProject"/>
+        <xmlwriter module="${currentProject}" customFile="${project.splitmod.file.custom}" contributeFile="${project.splitmod.file.contribute}"/>
     </target>
     
     <target name="createXmlFiles">

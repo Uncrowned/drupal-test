@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="dependencies" basedir=".">
+    <taskdef name="dependencies" classpath="${struct.tools}/dependencies" classname="DependenceTask"/>
+    
+    <target name="buildDepend" description="This project find dependencies in custom modules, and compare it with writed in .info files">        
+        <echo>Project for dependencies started</echo>
+        
+    </target>
+    
+    <target name="getPathsList">
+        <xmlparser file="${project.splitmod.file.custom}" tag="path" outputProperty="customPathsList"/>
+        <xmlparser file="${project.splitmod.file.custom}" tag="name" outputProperty="customNamesList"/>
+        <dependencies namesList="${customNamesList}" pathsList="${customPathsList}" basePath="${struct.code}"/>
+    </target>
+</project>

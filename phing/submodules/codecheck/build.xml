@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="codecheck" basedir=".">
-    <taskdef name="xmlparser" classpath="${struct.tools}/xmlParser" classname="XmlParserTask"/>
+    <taskdef name="xmlparser" classpath="${struct.tools}/xmlInstruments" classname="XmlParserTask"/>
     
     <target name="codecheck" description="Check all custom modules on code style, mess, copy-past.">
         <echo>Project for check custom modules started</echo>
@@ -11,8 +11,8 @@
     </target>
     
     <target name="parseAndCopy">
-        <xmlparser file="${project.splitmod.file.custom}" tag="module" outputProperty="customModulesList"/>
-        <foreach list="${customModulesList}" param="mname" target="copyCustomModule"/>
+        <xmlparser file="${project.splitmod.file.custom}" tag="name" outputProperty="customNameList"/>
+        <foreach list="${customNameList}" param="mname" target="copyCustomModule"/>
     </target>
 
     <target name="launchTests">
@@ -48,13 +48,13 @@
     </target>
     
     <target name="copyCustomModule">
-        <exec command="drush pmi ${mname} --pipe --fields=path --format=csv" dir="${struct.code}" outputProperty="result"/>
-        <mkdir dir="${struct.root}${project.custom}/${project.custom.modules}/${mname}"/>
+        <xmlparser file="${project.splitmod.file.custom}" tag="path" outputProperty="result" condition="name=${mname}"/>
+        <!-- <mkdir dir="${struct.root}${project.custom}/${project.custom.modules}/${mname}"/>
         <copy todir="${struct.root}${project.custom}/${project.custom.modules}/${mname}">
             <fileset dir="${struct.code}/${result}" >
                 <include name="**"/>
             </fileset>
         </copy>
-        <echo msg="${mname} copied"/>
+        <echo msg="${mname} copied"/> -->
     </target>
 </project>
