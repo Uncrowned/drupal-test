@@ -1,23 +1,19 @@
 <?php
-/*
- * Пара вопросов. 1 - регулярка, 2 - список объявленных функций мы составляем только из кастомных модулей или нет?
- * 3 - поиск вызывающих функций проводить только по кастомным модулям или нет?
- * 4 - регулярка на поиск объявленных функций
- */
 require_once "/usr/share/pear/phing/Task.php";
-require_once "GraphBuilder.php";
-
 /**
  * Description of dependenceTag
  *
  * @author leo
  */
 class DependenceTask extends Task {
-    //mb here should be some refinements about regular expression
-    //const REG_FUNC_DECLARE = "~[^/\"'][ ]*function[ ]+[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*?\(~";
-    const REG_FUNC_DECLARE = "~[^((\" *?)|(\/\/ *?))|(\/\* *?)|(\' *?))]function\s+[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*?\s*?\(~";
+    const REG_FUNC_DECLARE = "~[^((\" *?)|(\/\/ *?)|(\/\* *?)|(\' *?))]function\s+[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*?\s*?\(~";
     const REG_FUNC_KEY_WORD = "~function[ ]+?~";
-    const REG_FUNC_CALL = "~[^((\" *?)|(\/\/ *?))|(\/\* *?)|(\' *?))][^(functions)]\s+[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*?\s*?\(~";
+    const REG_FUNC_CALL = "(?<!function)\s+?";
+    
+    /**
+     * Attribute contain "module" => "function1|function2 and other".
+     */
+    private $requestsOnModule= null;
     
     /**
      * Attribute for module paths list.
@@ -30,13 +26,13 @@ class DependenceTask extends Task {
     private $declaredFuncs = null;
     
     /**
-     * Attribute for called functions.
+     * Attribute which store graph dependencies of modules.
      */
-    private $calledFuncs = null;
+    private $graphOfModules= null;
     
-    /*
+   /**
     * Attribute for base path.
-     */
+    */
     private $basePath = null;
     
     /**
@@ -112,8 +108,6 @@ class DependenceTask extends Task {
             $this->scanFilesForDeclare($path, $this->namesList[$i]);
             $i++;
         }
-        
-        return $result;
     }
     
     /**
@@ -121,16 +115,19 @@ class DependenceTask extends Task {
      */
     private function scanFilesForDeclare($path, $moduleName) {
         $filesList = $this->getFilesList($path);
-
-        foreach ($filesList as $file) {
-            $counter = count($file);
-            //as $fileList is array of arrays, we need to double cycle
-            if ($counter > 1) {
-                for ($i = 0; $i < $counter; $i++) {
-                    $this->findFunctionsDeclare($file, $moduleName);
+        
+        if (!self::isMassiveEmpty($filesList)) {
+            foreach ($filesList as $file) {
+                $counter = count($file);
+                //as $fileList is array of arrays, we need to double cycle
+                if ($counter > 1) {
+                    for ($i = 0; $i < $counter; $i++) {
+                        //echo $file[$i]."\n";
+                        $this->findFunctionsDeclare($file[$i], $moduleName);
+                    }
+                } else {
+                    $this->findFunctionsDeclare($file[0], $moduleName);
                 }
-            } else {
-                $this->findFunctionsDeclare($file, $moduleName);
             }
         }
     }
@@ -139,8 +136,6 @@ class DependenceTask extends Task {
      * This method 
  -   */
     private function findFunctionsDeclare($file, $moduleName) {
-        //its need cuz argument file is array
-        $file = implode("", $file);
         //temp solution, with function file_get_contents
         $content = file_get_contents($file);
         
@@ -177,38 +172,80 @@ class DependenceTask extends Task {
     /**
      * This method 
      */
-    private function findFunctionsCall($file, $moduleName) {
-        //its need cuz argument file is array
-        $file = implode("", $file);
-        //temp solution, with function file_get_contents
-        $content = file_get_contents($file);
-        //Надо разобраться с регуляркой на поиск вызовов функций
-        preg_match_all(self::REG_FUNC_CALL, $content, $matches, PREG_PATTERN_ORDER);
+    private function buildMassiveOfRequest() {
+        $spaceRegEx = "\s*?\(|";
         
-        foreach ($matches[0] as $match) {
-            //$functionName = preg_replace(self::REG_FUNC_KEY_WORD, "", $match);
-            //$functionName = str_replace("(", "", $functionName);
-            $functionName = str_replace("(", "", $match);
-            
-            $this->calledFuncs[$functionName][] = $moduleName;
+        $currentModule = current($this->declaredFuncs);
+        $this->requestsOnModule[$currentModule] = "(".key($this->declaredFuncs).$spaceRegEx;
+        next($this->declaredFuncs);
+        
+        while ($module = current($this->declaredFuncs)) {
+            if ($module == $currentModule) {
+                $this->requestsOnModule[$currentModule] .= key($this->declaredFuncs).$spaceRegEx;
+            } else {
+                $currentModule = $module;
+                $this->requestsOnModule[$currentModule] = "(".key($this->declaredFuncs).$spaceRegEx;
+            }
+            next($this->declaredFuncs);
+        }
+        
+        foreach ($this->requestsOnModule as $module => $functions) {
+            $this->requestsOnModule[$module] = substr($functions, 0, -1).")";
+            //echo $module." => ".$this->requestsOnModule[$module]."\n";
         }
     }
     
     /**
      * This method 
      */
+    private function buildGraphByCalls($file, $verifiableModule) {
+        $content = file_get_contents($file);
+        
+        foreach ($this->requestsOnModule as $module => $request) {
+            if ($module != $verifiableModule) {
+                $regexp = "~".self::REG_FUNC_CALL.$request."~";
+                //echo $file."\n";
+                //echo $regexp."\n\n";
+                preg_match_all($regexp, $content, $matches, PREG_PATTERN_ORDER);
+            }
+            
+            if (!self::isMassiveEmpty($matches)) {
+                $this->graphOfModules[$verifiableModule] = $module;
+            }
+        }
+    }
+    
+    public static function isMassiveEmpty($arr) {
+        if (empty($arr)) 
+            return true; // если уже пусто
+        else {
+          if (is_array($arr)) {
+              foreach ($arr as $a) {
+                  if (self::isMassiveEmpty($a)) 
+                      return true; // рекурсивный вызов функцией самой себя, но на один уровень массива глубже
+              }
+              return false;
+          }
+          else // для простых переменных
+            return empty( $arr ); 
+        }
+        return true;
+    }
+    
     private function scanFilesForCall($path, $moduleName) {
         $filesList = $this->getFilesList($path);
         
-        foreach ($filesList as $file) {
-            $counter = count($file);
-            //as $fileList is array of arrays, we need to double cycle
-            if ($counter > 1) {
-                for ($i = 0; $i < $counter; $i++) {
-                    $this->findFunctionsCall($file, $moduleName);
+        if (!self::isMassiveEmpty($filesList)) {
+            foreach ($filesList as $file) {
+                $counter = count($file);
+                //as $fileList is array of arrays, we need to double cycle
+                if ($counter > 1) {
+                    for ($i = 0; $i < $counter; $i++) {
+                        $this->buildGraphByCalls($file[$i], $moduleName);
+                    }
+                } else {
+                    $this->buildGraphByCalls($file[0], $moduleName);
                 }
-            } else {
-                $this->findFunctionsCall($file, $moduleName);
             }
         }
     }
@@ -228,9 +265,11 @@ class DependenceTask extends Task {
      * The main entry point method.
      */
     public function main() {
-        //$this->buildTableOfDeclare();
+        $this->buildTableOfDeclare();
+        $this->buildMassiveOfRequest();
+        echo count($this->requestsOnModule)."\n";
+        echo count($this->declaredFuncs);
         $this->buildTableOfCall();
-        
-        $graphBuilder = new GraphBuilder($this->declaredFuncs, $this->calledFuncs);
+        var_dump($this->graphOfModules);
     }
 }
