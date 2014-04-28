@@ -14,6 +14,7 @@
         <xmlparser file="${project.splitmod.file.contribute}" tag="name" outputProperty="contributeNamesList"/>
         <property name="namesList" value="${customNamesList},${contributeNamesList}" />
         <property name="pathsList" value="${customPathsList},${contributePathsList}" />
-        <dependencies namesList="${contributeNamesList}" pathsList="${contributePathsList}" basePath="${struct.code}"/>
+        <dependencies namesList="${contributeNamesList}" pathsList="${contributePathsList}" basePath="${struct.code}"/> 
+        <!-- <dependencies namesList="${customNamesList}" pathsList="${customPathsList}" basePath="${struct.code}"/> -->
     </target>
 </project>

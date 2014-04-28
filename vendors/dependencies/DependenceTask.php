@@ -10,25 +10,17 @@ class DependenceTask extends Task {
     const REG_FUNC_KEY_WORD = "~function[ ]+?~";
     const REG_FUNC_CALL = "(?<!function)\s+?";
     
-    /**
-     * Attribute contain "module" => "function1|function2 and other".
+    /*
+     * 
      */
-    private $requestsOnModule= null;
+    private $modules = null;
+    
+    private $depend = 0;
     
     /**
      * Attribute for module paths list.
      */
     private $pathsList = null;
-    
-    /**
-     * Attribute for declared functions.
-     */
-    private $declaredFuncs = null;
-    
-    /**
-     * Attribute which store graph dependencies of modules.
-     */
-    private $graphOfModules= null;
     
    /**
     * Attribute for base path.
@@ -46,7 +38,7 @@ class DependenceTask extends Task {
     private $namesList = null;
     
     /**
-     * Attribute for delimiter.
+     * Attribute delimiter for explode pathsList and namesList
      */
     private $delimiter = null;
     
@@ -103,31 +95,18 @@ class DependenceTask extends Task {
      * This method build table of declared functions
      */
     private function buildTableOfDeclare() {
-        $i = 0;
-        foreach ($this->pathsList as $path) {
-            $this->scanFilesForDeclare($path, $this->namesList[$i]);
-            $i++;
+        foreach($this->modules as $name => $value) {
+            $this->scanFilesForDeclare($this->modules[$name]["filesList"], $name);
         }
     }
     
     /**
      * This method scan files on contain declare of functions 
      */
-    private function scanFilesForDeclare($path, $moduleName) {
-        $filesList = $this->getFilesList($path);
-        
+    private function scanFilesForDeclare($filesList, $moduleName) {
         if (!self::isMassiveEmpty($filesList)) {
             foreach ($filesList as $file) {
-                $counter = count($file);
-                //as $fileList is array of arrays, we need to double cycle
-                if ($counter > 1) {
-                    for ($i = 0; $i < $counter; $i++) {
-                        //echo $file[$i]."\n";
-                        $this->findFunctionsDeclare($file[$i], $moduleName);
-                    }
-                } else {
-                    $this->findFunctionsDeclare($file[0], $moduleName);
-                }
+                $this->findFunctionsDeclare($file, $moduleName);
             }
         }
     }
@@ -136,9 +115,7 @@ class DependenceTask extends Task {
      * This method 
  -   */
     private function findFunctionsDeclare($file, $moduleName) {
-        //temp solution, with function file_get_contents
         $content = file_get_contents($file);
-        
         preg_match_all(self::REG_FUNC_DECLARE, $content, $matches, PREG_PATTERN_ORDER);
         
         foreach ($matches[0] as $match) {
@@ -146,71 +123,73 @@ class DependenceTask extends Task {
             $functionName = str_replace("(", "", $functionName);
             $functionName = trim($functionName);
             
-            //echo $functionName."=>".$moduleName."\n";
-            $this->declaredFuncs[$functionName] = $moduleName;
+            $this->modules[$moduleName]["declaredFunctions"][] = $functionName;
         }
     }
     
     /**
-     * This method 
+     * Метод для получения списка файлов, которые будут исследованны.
  -   */
-    private function getFilesList($path) {
+    private function getFilesList() {
         $typeCounter = count($this->filesType);
+        $j = 0;
         
-        for ($i = 0; $i < $typeCounter; $i++) {
-            //glob function return array, even if directory will have only one such file
-            $findedFiles = glob($this->basePath."/".$path."/".$this->filesType[$i]);
-            
-            if (count($findedFiles) != 0) {
-                $result[] = $findedFiles;
+        foreach($this->pathsList as $path) {
+            //для каждого пути находим файлы с нужным расширением
+            for ($i = 0; $i < $typeCounter; $i++) {
+                //glob function return array, even if directory will have only one such file
+                $findedFiles = glob($this->basePath."/".$path."/".$this->filesType[$i]);
+                /* и если что то нашли то добавляем в свойство, с ключем имени модуля.
+                 * тут пропадают модули которе не содержат файлов с расширениями из массива filesType
+                 */
+                if (!self::isMassiveEmpty($findedFiles)) {
+                    $this->modules[$this->namesList[$j]]["filesList"] = $findedFiles;
+                }
             }
+            $j++;
         }
-        
-        return $result;
+        //echo "paths list = ".count($this->pathsList)."\n";
+        //echo "modules = ".count($this->modules)."\n"; 
     }
     
     /**
-     * This method 
+     * Метод строит массив регулярок, в каждой регулярке все найденные объявленные функции, 
+     * для конкретного модуля
      */
     private function buildMassiveOfRequest() {
-        $spaceRegEx = "\s*?\(|";
+        $spaceRegEx = "\s*?\(";
         
-        $currentModule = current($this->declaredFuncs);
-        $this->requestsOnModule[$currentModule] = "(".key($this->declaredFuncs).$spaceRegEx;
-        next($this->declaredFuncs);
-        
-        while ($module = current($this->declaredFuncs)) {
-            if ($module == $currentModule) {
-                $this->requestsOnModule[$currentModule] .= key($this->declaredFuncs).$spaceRegEx;
-            } else {
-                $currentModule = $module;
-                $this->requestsOnModule[$currentModule] = "(".key($this->declaredFuncs).$spaceRegEx;
+        foreach($this->modules as $name => $value) {
+            $declaredFunctions = $this->modules[$name]["declaredFunctions"];
+
+            if (!empty($declaredFunctions)) {
+                $this->modules[$name]["RegExpRequest"] = 
+                        implode($spaceRegEx."|", $declaredFunctions);
+                
+                $this->modules[$name]["RegExpRequest"] = 
+                        "(".$this->modules[$name]["RegExpRequest"].$spaceRegEx.")";
             }
-            next($this->declaredFuncs);
-        }
-        
-        foreach ($this->requestsOnModule as $module => $functions) {
-            $this->requestsOnModule[$module] = substr($functions, 0, -1).")";
-            //echo $module." => ".$this->requestsOnModule[$module]."\n";
         }
     }
     
     /**
      * This method 
      */
-    private function buildGraphByCalls($file, $verifiableModule) {
+    private function appendInGraphByCalls($file, $verifiableModule) {
         $content = file_get_contents($file);
-        
-        foreach ($this->requestsOnModule as $module => $request) {
-            if ($module != $verifiableModule) {
-                $regexp = "~".self::REG_FUNC_CALL.$request."~";
-                //echo $file."\n";
-                //echo $regexp."\n\n";
-                preg_match_all($regexp, $content, $matches, PREG_PATTERN_ORDER);
-            }
-            
-            if (!self::isMassiveEmpty($matches)) {
-                $this->graphOfModules[$verifiableModule] = $module;
+        reset($this->modules);
+
+        foreach ($this->modules as $name => $value) {
+            if ($name != $verifiableModule) {
+                if (!empty($this->modules[$name]["RegExpRequest"])) {
+                    $regexp = "~".self::REG_FUNC_CALL.$this->modules[$name]["RegExpRequest"]."~";
+                    preg_match_all($regexp, $content, $matches, PREG_PATTERN_ORDER);
+
+                    if (!self::isMassiveEmpty($matches)) {
+                        $this->depend++;
+                        $this->modules[$name]["dependencies"][] = &$this->modules[$verifiableModule];
+                    }
+                }
             }
         }
     }
@@ -226,26 +205,17 @@ class DependenceTask extends Task {
               }
               return false;
           }
-          else // для простых переменных
-            return empty( $arr ); 
+          else {
+              return empty($arr); // для простых переменных
+          }
         }
         return true;
     }
     
-    private function scanFilesForCall($path, $moduleName) {
-        $filesList = $this->getFilesList($path);
-        
+    private function scanFilesForCall($filesList, $moduleName) {
         if (!self::isMassiveEmpty($filesList)) {
             foreach ($filesList as $file) {
-                $counter = count($file);
-                //as $fileList is array of arrays, we need to double cycle
-                if ($counter > 1) {
-                    for ($i = 0; $i < $counter; $i++) {
-                        $this->buildGraphByCalls($file[$i], $moduleName);
-                    }
-                } else {
-                    $this->buildGraphByCalls($file[0], $moduleName);
-                }
+                $this->appendInGraphByCalls($file, $moduleName);
             }
         }
     }
@@ -254,10 +224,8 @@ class DependenceTask extends Task {
      * This method build table of called functions
      */
     private function buildTableOfCall() {
-        $i = 0;
-        foreach ($this->pathsList as $path) {
-            $this->scanFilesForCall($path, $this->namesList[$i]);
-            $i++;
+        foreach($this->modules as $name => $value) {
+            $this->scanFilesForCall($this->modules[$name]["filesList"], $name);
         }
     }
 
@@ -265,11 +233,18 @@ class DependenceTask extends Task {
      * The main entry point method.
      */
     public function main() {
+        $this->getFilesList();
         $this->buildTableOfDeclare();
         $this->buildMassiveOfRequest();
-        echo count($this->requestsOnModule)."\n";
-        echo count($this->declaredFuncs);
         $this->buildTableOfCall();
-        var_dump($this->graphOfModules);
+        /*$sum = 0;
+        foreach ($this->namesList as $name) {
+            $sum += count($this->modules[$name]["RegExpRequest"]);
+            //$sum += count($this->modules[$name]["declaredFunctions"]);
+            //echo count($this->modules[$name]["dependencies"]);
+        }
+        echo $sum;
+        echo count($this->modules);
+        echo $this->depend;*/
     }
 }
