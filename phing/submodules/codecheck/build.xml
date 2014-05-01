@@ -49,12 +49,12 @@
     
     <target name="copyCustomModule">
         <xmlparser file="${project.splitmod.file.custom}" tag="path" outputProperty="result" condition="name=${mname}"/>
-        <!-- <mkdir dir="${struct.root}${project.custom}/${project.custom.modules}/${mname}"/>
+        <mkdir dir="${struct.root}${project.custom}/${project.custom.modules}/${mname}"/>
         <copy todir="${struct.root}${project.custom}/${project.custom.modules}/${mname}">
             <fileset dir="${struct.code}/${result}" >
                 <include name="**"/>
             </fileset>
         </copy>
-        <echo msg="${mname} copied"/> -->
+        <echo msg="${mname} copied"/>
     </target>
 </project>

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="dependencies" basedir=".">
-    <taskdef name="dependencies" classpath="${struct.tools}/dependencies" classname="DependenceTask"/>
+    <taskdef name="dependencies" classpath="${struct.tools}/dependencies" classname="DependenciesTask"/>
     
     <target name="buildDepend" description="This project find dependencies in custom modules, and compare it with writed in .info files">        
         <echo>Project for dependencies started</echo>
-        
+        <dependencies xml="${project.splitmod.file.custom}" basePath="${struct.code}"/>
     </target>
     
-    <target name="getPathsList">
+    <!-- <target name="getDependenc">
         <xmlparser file="${project.splitmod.file.custom}" tag="path" outputProperty="customPathsList"/>
         <xmlparser file="${project.splitmod.file.custom}" tag="name" outputProperty="customNamesList"/>
         <xmlparser file="${project.splitmod.file.contribute}" tag="path" outputProperty="contributePathsList"/>
@@ -15,6 +15,6 @@
         <property name="namesList" value="${customNamesList},${contributeNamesList}" />
         <property name="pathsList" value="${customPathsList},${contributePathsList}" />
         <dependencies namesList="${contributeNamesList}" pathsList="${contributePathsList}" basePath="${struct.code}"/> 
-        <!-- <dependencies namesList="${customNamesList}" pathsList="${customPathsList}" basePath="${struct.code}"/> -->
-    </target>
+         <dependencies namesList="${customNamesList}" pathsList="${customPathsList}" basePath="${struct.code}"/>
+    </target> -->
 </project>
