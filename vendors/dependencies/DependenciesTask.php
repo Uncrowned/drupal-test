@@ -29,7 +29,6 @@ class DependenciesTask extends Task{
     private $xml = null;
     
     public function setXml($xmlFilePath) {
-        //$this->xml = new XmlParser($xmlFilePath);
         $this->xml = simplexml_load_file($xmlFilePath);
         
         if (!$this->xml) {
@@ -61,16 +60,11 @@ class DependenciesTask extends Task{
     }
     
     private function createModulesList() {
-        $modulesXml = $this->xml->xpath('/modules/module');
-        
-        foreach ($modulesXml as $xmlObject) {
+        foreach ($this->xml->xpath('/modules/module') as $xmlObject) {
             $module = &ModulesList::GetModule((string)$xmlObject->name);
 
             if (!$module->isLoaded()) {
                 $module->load($xmlObject);
-                $module->setRequiredByFromInfo($this->checkRequiredModules((string)$xmlObject->required_by));
-                $module->setRequiresFromInfo($this->checkRequiredModules((string)$xmlObject->requires));
-
                 $this->setDeclaredFunctions($module->getName());
             }
         }
@@ -140,21 +134,6 @@ class DependenciesTask extends Task{
                 next($modulesList);
             }
         }
-    }
-        
-    private function checkRequiredModules($modules) {
-        if (!empty($modules)) {
-            $modules = explode(" ", $modules);
-            
-            foreach ($modules as $moduleName) {
-                if (!empty($moduleName)) {
-                    $module = &ModulesList::GetModule($moduleName);
-                    $required[] = $module;
-                }
-            }
-        }
-        
-        return $required;
     }
     
     /**

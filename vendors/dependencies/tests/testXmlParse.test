@@ -35,6 +35,7 @@ class testXmlParse extends PHPUnit_Framework_TestCase {
            $module2 = ModulesList::GetModule($name);
            $this->assertTrue($module === $module2);
            $module->load($module_data_xml);
+           $this->assertTrue($module->isLoaded());
         }
     }
 }

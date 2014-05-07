@@ -6,6 +6,8 @@
  * and open the template in the editor.
  */
 
+require_once 'ModulesList.php';
+
 /**
  * Description of Module
  *
@@ -216,8 +218,26 @@ class Module {
         
         $this->schemaVersion = (string)$data->schema_version;
         $this->version = (string)$data->version;
+        $this->requiredByFromInfo = $this->checkRequiredModules((string)$data->required_by);
+        
+        $this->requiresFromInfo = $this->checkRequiredModules((string)$data->requires);
         
         $this->isLoaded = true;
+    }
+    
+    private function checkRequiredModules($modules) {
+        if (!empty($modules)) {
+            $modules = explode(" ", $modules);
+            
+            foreach ($modules as $moduleName) {
+                if (!empty($moduleName)) {
+                    $module = &ModulesList::GetModule($moduleName);
+                    $required[] = $module;
+                }
+            }
+        }
+        
+        return $required;
     }
     
     public function isLoaded() {
