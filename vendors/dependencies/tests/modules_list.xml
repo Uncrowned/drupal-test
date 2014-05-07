@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<modules>
+    <module>
+        <name>cck_formatter_view</name>
+        <extension>cck_formatter_view</extension>
+        <project>Unknown</project>
+        <type>module</type>
+        <title>Content formatter view</title>
+        <description>Use views as content formatters.</description>
+        <date>1970-01-01</date>
+        <package>CCK</package>
+        <core>6.x</core>
+        <php>4.3.5</php>
+        <status>enabled</status>
+        <path>sites/all/modules/custom/cck_formatter_view</path>
+        <schema_version>6002</schema_version>
+        <requires>content views</requires>
+        <required_by>cck_formatter_view_content_taxonomy cck_formatter_view_nodereference cck_formatter_view_ui feature_deonline_ct features_deonline_modules features_deonline_permissions</required_by>
+        <permissions>"administer formatters"</permissions>
+    </module>
+    <module>
+        <name>cck_formatter_view_content_taxonomy</name>
+        <extension>cck_formatter_view_content_taxonomy</extension>
+        <project>Unknown</project>
+        <type>module</type>
+        <title>Content formatter view content taxonomy handler</title>
+        <description>Add content taxonomy handler for formatter views.</description>
+        <date>1970-01-01</date>
+        <package>CCK</package>
+        <core>6.x</core>
+        <php>4.3.5</php>
+        <status>not installed</status>
+        <path>sites/all/modules/custom/cck_formatter_view/modules/cck_formatter_view_content_taxonomy</path>
+        <schema_version>no schema installed</schema_version>
+        <requires>content_taxonomy cck_formatter_view content taxonomy views</requires>
+        <required_by/>
+    </module>
+    <module>
+        <name>cck_formatter_view_nodereference</name>
+        <extension>cck_formatter_view_nodereference</extension>
+        <project>Unknown</project>
+        <type>module</type>
+        <title>Content formatter view node reference handler</title>
+        <description>Add node reference handler for formatter views.</description>
+        <date>1970-01-01</date>
+        <package>CCK</package>
+        <core>6.x</core>
+        <php>4.3.5</php>
+        <status>enabled</status>
+        <path>sites/all/modules/custom/cck_formatter_view/modules/cck_formatter_view_nodereference</path>
+        <schema_version>module has no schema</schema_version>
+        <requires>nodereference cck_formatter_view content text optionwidgets views</requires>
+        <required_by>features_deonline_modules</required_by>
+    </module>
+    <module>
+        <name>cck_formatter_view_ui</name>
+        <extension>cck_formatter_view_ui</extension>
+        <project>Unknown</project>
+        <type>module</type>
+        <title>Content formatter view UI</title>
+        <description>Enable admin ui for Content formatter view.</description>
+        <date>1970-01-01</date>
+        <package>CCK</package>
+        <core>6.x</core>
+        <php>4.3.5</php>
+        <status>enabled</status>
+        <path>sites/all/modules/custom/cck_formatter_view/cck_formatter_view_ui</path>
+        <schema_version>module has no schema</schema_version>
+        <requires>cck_formatter_view content views</requires>
+        <required_by>features_deonline_modules</required_by>
+    </module>
+    <module>
+        <name>meta_quiz</name>
+        <extension>meta_quiz</extension>
+        <project>Unknown</project>
+        <type>module</type>
+        <title>Meta quiz</title>
+        <description>Provide meta quiz.</description>
+        <date>1970-01-01</date>
+        <package>CCK</package>
+        <core>6.x</core>
+        <php>4.3.5</php>
+        <status>not installed</status>
+        <path>sites/all/modules/custom/meta_quiz</path>
+        <schema_version>no schema installed</schema_version>
+        <requires>nodereference quiz content text optionwidgets taxonomy</requires>
+        <required_by/>
+    </module>
+    <module>
+        <name>skype_status_cck</name>
+        <extension>skype_status_cck</extension>
+        <project>Unknown</project>
+        <type>module</type>
+        <title>Skype</title>
+        <description>Defines skype field types.</description>
+        <date>1970-01-01</date>
+        <package>CCK</package>
+        <core>6.x</core>
+        <php>4.3.5</php>
+        <status>enabled</status>
+        <path>sites/all/modules/custom/skype_status_cck</path>
+        <schema_version>module has no schema</schema_version>
+        <requires>text skype_status content profile</requires>
+        <required_by>feature_deonline_ct features_deonline_modules</required_by>
+    </module>
+    <module>
+        <name>atooltip</name>
+        <extension>atooltip</extension>
+        <project>Unknown</project>
+        <type>module</type>
+        <title>Atool tip</title>
+        <description>Provides integration with atooltip</description>
+        <date>1970-01-01</date>
+        <package>Custom</package>
+        <core>6.x</core>
+        <php>4.3.5</php>
+        <status>enabled</status>
+        <path>sites/all/modules/custom/atooltip</path>
+        <schema_version>module has no schema</schema_version>
+        <requires/>
+        <required_by>features_deonline_modules</required_by>
+    </module>
+    <module>
+        <name>deonline_formatters</name>
+        <extension>deonline_formatters</extension>
+        <project>Unknown</project>
+        <type>module</type>
+        <title>Deonline formatters</title>
+        <description>Provides custom formatters for deonline</description>
+        <date>1970-01-01</date>
+        <package>Custom</package>
+        <core>6.x</core>
+        <php>4.3.5</php>
+        <status>enabled</status>
+        <path>sites/all/modules/custom/deonline_formatters</path>
+        <schema_version>module has no schema</schema_version>
+        <requires></requires>
+        <required_by>features_deonline_modules</required_by>
+    </module>
+</modules>

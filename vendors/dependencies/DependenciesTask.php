@@ -5,8 +5,7 @@
  * and open the template in the editor.
  */
 require_once "/usr/share/pear/phing/Task.php";
-
-require_once 'XmlParser.php';
+require_once 'ModulesList.php';
 require_once 'Module.php';
 require_once 'Function.php';
 
@@ -16,14 +15,9 @@ require_once 'Function.php';
  * @author leo
  */
 class DependenciesTask extends Task{
-    //const REG_FUNC_DECLARE = "[^((\" *?)|(\/\/ *?)|(\/\* *?)|(\' *?))]function[:space:]+[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*?";
-    //const REG_FUNC_DECLARE = "[^\"(\/\/)(\/\*)\'][:space:]*?function[:space:]+[a-zA-Z_][a-zA-Z0-9_]*?";
-    //const REG_FUNC_DECLARE = "function[:space:]+?[a-zA-Z_][a-zA-Z0-9_]*?";
-    const REG_FUNC_DECLARE = "function[:space:]+?";
-    /**
-     * Attribute for contain objects of modules
-     */
-    private $modules = null;
+    //Надо дописать регулярку, пока она находит функции закомментированные, и те, что являются строкой, не знаю как это обойти
+    const REG_FUNC_DECLARE = "function[[:space:]]\{1,\}[a-zA-Z_][a-zA-Z0-9_]\{0,\}";
+    const EGREP = "egrep -h -s ";
     
     private $basePath = null;
     
@@ -35,7 +29,15 @@ class DependenciesTask extends Task{
     private $xml = null;
     
     public function setXml($xmlFilePath) {
-        $this->xml = new XmlParser($xmlFilePath);
+        //$this->xml = new XmlParser($xmlFilePath);
+        $this->xml = simplexml_load_file($xmlFilePath);
+        
+        if (!$this->xml) {
+            echo "Can't open file ".$this->file."\n";
+            foreach(libxml_get_errors() as $error) {
+                echo "\t", $error->message;
+            }
+        }
     }
     
     public function setBasePath($path) {
@@ -55,31 +57,30 @@ class DependenciesTask extends Task{
             1 => "*.inc",
             2 => "*.install"
         );
-        $this->setFilesType($filesType);
+        $this->setFilesType($filesType);        
     }
     
     private function createModulesList() {
-        $count = $this->xml->countModules();
+        $modulesXml = $this->xml->xpath('/modules/module');
         
-        for ($i = 0; $i < $count; $i++) {
-            $data = $this->getDataForModule($this->xml->getDataByIndex($i));
-            
-            if (!$this->isModuleExist($data["name"])) {
-                $this->modules[$data["name"]] = new Module($data["name"]);
+        foreach ($modulesXml as $xmlObject) {
+            $module = &ModulesList::GetModule((string)$xmlObject->name);
+
+            if (!$module->isLoaded()) {
+                $module->load($xmlObject);
+                $module->setRequiredByFromInfo($this->checkRequiredModules((string)$xmlObject->required_by));
+                $module->setRequiresFromInfo($this->checkRequiredModules((string)$xmlObject->requires));
+
+                $this->setDeclaredFunctions($module->getName());
             }
-            
-            if (!$this->modules[$data["name"]]->isLoaded()) {
-                $this->modules[$data["name"]]->load($data);
-                $this->setDeclaredFunctions($data["name"]);
-            }
-            
-            break;
         }
     }
     
     private function setDeclaredFunctions($name) {
-        $path = $this->modules[$name]->getPath();
-        $command = "egrep -h ".self::REG_FUNC_DECLARE." ";
+        $module = &ModulesList::GetModule($name);
+        $path = $this->basePath."/".$module->getPath();
+        $command = DependenciesTask::EGREP.self::REG_FUNC_DECLARE." ";
+        $regExp = ""; 
         
         foreach ($this->filesType as $type) {
             $command .= $path."/".$type." ";
@@ -87,15 +88,57 @@ class DependenciesTask extends Task{
         
         exec($command, $output);
         
-        var_dump($output);
-        //echo $command."\n";
+        foreach ($output as $string) {
+            $string = substr($string, 0, strpos($string, "("));
+            $string = str_replace(array("function ", " "), "", $string);
+            
+            if (!empty($string)) {
+                $function = new FunctionObject($string, $module);
+                $regExp .= $string."[[:space:]]\{0,\}[\(]\|"; 
+                $module->appendDeclaredFunction($function);
+            }
+        }
+        
+        $regExp = substr_replace($regExp, "", -1, 2);
+        $module->setRegExp($regExp);
     }
     
-    private function isModuleExist($name) {
-        if (empty($this->modules[$name])) {
-            return false;
-        } else {
+    private function execEgrep($path, $regExp) {
+        $command = self::EGREP.$regExp." ";
+                        
+        foreach ($this->filesType as $type) {
+            $command .= $path."/".$type." ";
+        }
+                        
+        exec($command, $output);
+        
+        if (!empty($output)) {
             return true;
+        } else {
+            return false;
+        }
+    }
+    
+    /*
+     * Temporary function, im not sure that is optimal
+     */
+    private function buildDependencies() {
+        $modulesList = &ModulesList::GetModulesList();
+        foreach ($modulesList as $module) {
+            reset($modulesList);
+            //echo "main ".$module->getName()."\n";
+            
+            while($current = current($modulesList)) {
+                if ($module->getName() != $current->getName()) {
+                    if ($current->isLoaded() && $module->isLoaded()) {
+                        if ($this->execEgrep($this->basePath."/".$module->getPath(), $current->getRegExp())) {
+                            $module->appendRequiredByFunction($current);
+                        }
+                    }
+                }
+                
+                next($modulesList);
+            }
         }
     }
         
@@ -105,12 +148,8 @@ class DependenciesTask extends Task{
             
             foreach ($modules as $moduleName) {
                 if (!empty($moduleName)) {
-                    if (!$this->isModuleExist($moduleName)) {
-                        $this->modules[$moduleName] = new Module($moduleName);
-                    }
-                    
-                    $required[] = &$this->modules[$moduleName];
-                    //$required[] = $moduleName;
+                    $module = &ModulesList::GetModule($moduleName);
+                    $required[] = $module;
                 }
             }
         }
@@ -118,46 +157,11 @@ class DependenciesTask extends Task{
         return $required;
     }
     
-    private function getDataForModule($data) {
-        $newData["name"] = strip_tags($data->name->asXml());
-        $newData["extension"] = strip_tags($data->extension->asXml());
-        $newData["project"] = strip_tags($data->project->asXml());
-        
-        $newData["type"] = strip_tags($data->type->asXml());
-        $newData["title"] = strip_tags($data->title->asXml());
-        $newData["description"] = strip_tags($data->description->asXml());
-        
-        $newData["date"] = strip_tags($data->date->asXml());
-        $newData["package"] = strip_tags($data->package->asXml());
-        $newData["core"] = strip_tags($data->core->asXml());
-        
-        $newData["phpVersion"] = strip_tags($data->php->asXml());
-        $newData["status"] = strip_tags($data->status->asXml());
-        $newData["path"] = $this->basePath."/".strip_tags($data->path->asXml());
-        
-        $newData["schemaVersion"] = strip_tags($data->schema_version->asXml());
-        $newData["permissions"] = strip_tags($data->permissions->asXml());
-        $newData["version"] = strip_tags($data->version->asXml());
-        
-        $newData["requiredBy"] = $this->checkRequiredModules(strip_tags($data->required_by->asXml()));
-        $newData["requires"] = $this->checkRequiredModules(strip_tags($data->requires->asXml()));
-        
-        return $newData;
-    }
-    
-    /*public static function getModuleByName($name) {
-        
-    }
-    
-    public static function getModuleByIndex($index) {
-        $module = &$this->modules[$index];
-        return $module;
-    }*/
-    
     /**
      * The main entry point method.
      */
     public function main() {
         $this->createModulesList();
+        $this->buildDependencies();
     }
 }

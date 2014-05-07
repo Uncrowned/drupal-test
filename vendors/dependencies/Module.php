@@ -51,10 +51,16 @@ class Module {
     
     private $requiredByFromFunc = null;
     
+    private $regExp = null;
+    
     private $isLoaded = false;
     
     public function getName() {
         return $this->name;
+    }
+    
+    public function getRegExp() {
+        return $this->regExp;
     }
     
     public function getRequiresFromInfo() {
@@ -136,7 +142,36 @@ class Module {
     public function setDeclaredFunctions($declaredFunctions) {
         $this->declaredFunctions = $declaredFunctions;
     }
-
+    
+    public function appendDeclaredFunction($function) {
+        $this->declaredFunctions[] = $function;
+    }
+    
+    public function insertDeclaredFunction($index, $function) {
+        $this->declaredFunctions[$index] = $function;
+    }
+    
+    public function removeDeclaredFunction($index) {
+        unset($this->declaredFunctions[$index]);
+        $this->declaredFunctions = array_values($this->declaredFunctions);
+    }
+    
+    public function clearDeclaredFunctions() {
+        array_splice($this->declaredFunctions, 0);
+    }
+    
+    public function setRegExp($regExp) {
+        $this->regExp = $regExp;
+    }
+    
+    public function setRequiresFromInfo($requiresFromInfo) {
+        $this->requiresFromInfo = $requiresFromInfo;
+    }
+    
+    public function setRequiredByFromInfo($requiredByFromInfo) {
+        $this->requiredByFromInfo = $requiredByFromInfo;
+    }
+    
     public function setRequiredByFromFunc($requiredByFromFunc) {
         $this->requiredByFromFunc = $requiredByFromFunc;
     }
@@ -145,28 +180,42 @@ class Module {
         $this->setName($name);
     }
     
+    public function appendRequiredByFunction(&$module) {
+        $this->requiredByFromFunc[] = $module;
+    }
+    
+    public function removeRequiredByFunction($index) {
+        unset($this->requiredByFromFunc[$index]);
+        $this->requiredByFromFunc = array_values($this->requiredByFromFunc);
+    }
+    
+    public function insertRequiredByFunction($index, &$module) {
+        $this->requiredByFromFunc[$index] = $module;
+    }
+    
+    public function clearRequiredByFunction() {
+        array_splice($this->requiredByFromFunc, 0);
+    }
+    
     public function load($data) {
-        $this->core = $data["core"];
-        $this->date = $data["date"];
-        $this->description = $data["description"];
+        $this->core = (string)$data->core;
+        $this->date = (string)$data->date;
+        $this->description = (string)$data->description;
         
-        $this->extension = $data["extension"];
-        $this->package = $data["package"];
-        $this->path = $data["path"];
+        $this->extension = (string)$data->extension;
+        $this->package = (string)$data->package;
+        $this->path = (string)$data->path;
         
-        $this->permissions = $data["permissions"];
-        $this->phpVersion = $data["php"];
-        $this->project = $data["project"];
+        $this->permissions = (string)$data->permissions;
+        $this->phpVersion = (string)$data->php;
+        $this->project = (string)$data->project;
         
-        $this->requiredByFromInfo = $data["requiredBy"];
-        $this->requiresFromInfo = $data["requires"];
-        $this->schemaVersion = $data["schemaVersion"];
+        $this->status = (string)$data->status;
+        $this->type = (string)$data->type;
+        $this->title = (string)$data->title;
         
-        $this->status = $data["status"];
-        $this->type = $data["type"];
-        $this->title = $data["title"];
-        
-        $this->version = $data["version"];
+        $this->schemaVersion = (string)$data->schema_version;
+        $this->version = (string)$data->version;
         
         $this->isLoaded = true;
     }
