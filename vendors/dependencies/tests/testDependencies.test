@@ -1,0 +1,117 @@
+<?php
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+require_once '../ModulesList.php';
+
+/**
+ * Description of XmlParce
+ *
+ * @author leo
+ */
+class testDependencies extends PHPUnit_Framework_TestCase {
+
+    public function testSimpleXml() {
+        $filename = __DIR__ . '/modules_list.xml';
+        $xml = simplexml_load_file($filename);
+        
+        $info = $xml->xpath('/modules/module');
+        $this->assertTrue(is_array($info));
+        $this->assertCount(8, $info);
+        
+        $this->assertEquals("cck_formatter_view", $info[0]->name);
+        $this->assertTrue(is_string((string) $info[0]->name));
+    } 
+    
+    public function testCreateModules() {
+        $filename = __DIR__ . '/modules_list.xml';
+        $xml = simplexml_load_file($filename);
+        
+        foreach ($xml->xpath('/modules/module') as $module_data_xml) {
+           $name = (string)$module_data_xml->name;
+           
+           $module = ModulesList::GetModule($name);
+           $module2 = ModulesList::GetModule($name);
+           $this->assertTrue(is_object($module));        
+           $this->assertTrue($module === $module2);
+           $this->assertEquals($module, $module2);
+           
+           $module->load($module_data_xml);
+           $this->assertTrue($module->isLoaded());
+        }
+    }
+    
+    public function testIsModuleExist() {
+        $one = ModulesList::GetModule("one");
+        $true = ModulesList::isModuleExist($one->getName());
+        $this->assertTrue($true);
+        $false = ModulesList::isModuleExist("two");
+        $this->assertFalse($false);
+    }
+    
+    public function testGetModulesList() {
+        $modulesList = ModulesList::GetModulesList();
+        $modulesList2 = ModulesList::GetModulesList();
+        $this->assertTrue(is_array($modulesList));
+        $this->assertEquals($modulesList, $modulesList2);
+        $this->assertTrue($modulesList === $modulesList2);
+        
+        $module = current($modulesList);
+        $this->assertTrue(is_object($module));
+    }
+    
+    public function testCheckRequiredModules() {
+        $filename = __DIR__ . '/modules_list.xml';
+        $xml = simplexml_load_file($filename);
+        
+        foreach ($xml->xpath('/modules/module') as $module_data_xml) {
+            $name = (string)$module_data_xml->name;
+            
+            $module = new Module($name);
+            $module->load($module_data_xml);
+            $requiredBy = $module->getRequiredByFromInfo();
+            $requires = $module->getRequiresFromInfo();
+            
+            if (!empty($requiredBy)) {
+                $this->assertTrue(is_array($requiredBy));
+                $this->assertTrue(is_object($requiredBy[0]));
+                $requiredModule = ModulesList::GetModule($requiredBy[0]->getName());
+                $this->assertTrue($requiredModule === $requiredBy[0]);
+                $this->assertEquals($requiredModule, $requiredBy[0]);
+            }
+            
+            if (!empty($requires)) {
+                $this->assertTrue(is_array($requires));
+                $this->assertTrue(is_object($requires[0]));
+                $requiresModule = ModulesList::GetModule($requires[0]->getName());
+                $this->assertTrue($requiresModule === $requires[0]);
+                $this->assertEquals($requiresModule, $requires[0]);
+            }
+        }
+    }
+    
+    public function testCreateFunction() {
+        $module = ModulesList::GetModule("one");
+        $function = new FunctionObject("getSomething", $module);
+        
+        $this->assertEquals($module, $function->getModule());
+        $this->assertTrue($module === $function->getModule());
+        $this->assertTrue("getSomething" == $function->getName());
+        
+        $module->appendDeclaredFunction($function);
+        $functionList = $module->getDeclaredFunctions();
+        $this->assertTrue(is_array($functionList));
+        $this->assertTrue($functionList[0] === $function);
+    }
+    
+    /*public function testSetDeclaredFunctions() {
+    
+    }
+    
+    public function testBuildDependencies() {
+        
+    }*/
+}

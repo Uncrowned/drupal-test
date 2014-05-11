@@ -26,7 +26,7 @@ class ModulesList {
         return self::$modules;
     }
     
-    private static function isModuleExist($name) {
+    public static function isModuleExist($name) {
         if (empty(self::$modules[$name])) {
             return false;
         } else {
